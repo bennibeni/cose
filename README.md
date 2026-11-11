@@ -2,6 +2,12 @@
 
 App Next.js con interfaccia italiana, password, CRUD, ricerca, ordinamento manuale e per campo, foto principale e galleria. Telefono e indirizzo sono obbligatori; gli altri campi sono facoltativi. Supporta filesystem locale oppure Google Drive privato con cifratura per il deploy su Vercel.
 
+## Documentazione per lo sviluppatore
+
+La [guida dettagliata dell'architettura](docs/ARCHITETTURA.md) descrive componenti, modello dati, API, sessioni, cifratura, storage, concorrenza, flusso foto, configurazione, deploy, test, backup e limiti del codice corrente.
+
+Per configurare gli account e le variabili cloud, consulta anche [Google Drive e Vercel](GOOGLE-DRIVE-VERCEL.md).
+
 ## Avvio
 
 1. `npm install`
