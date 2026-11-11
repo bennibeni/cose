@@ -1,0 +1,26 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {mkdtemp,rm} from 'node:fs/promises';
+import {tmpdir} from 'node:os';
+import path from 'node:path';
+const directory=await mkdtemp(path.join(tmpdir(),'cose-test-'));
+process.env.DATA_DIR=directory;
+process.env.STORAGE_BACKEND='local';
+delete process.env.VERCEL;
+process.env.ARCHIVE_PASSWORD='a-test-password';
+process.env.SESSION_SECRET='a-long-test-secret-with-at-least-32-characters';
+const {readArchive,updateArchive,validateItem}=await import('../lib/storage.mjs');
+const {authorized,login,token}=await import('../lib/auth.mjs');
+test('persistence, conflict detection and CRUD',async()=>{try{
+ const item=validateItem({phone:'123',date:'2026-11-11',address:'Roma',notes:'Nota',websites:['https://example.com'],photos:[]});
+ assert.equal((await readArchive()).revision,0);
+ await updateArchive(0,()=>[{...item,id:'one'}]);
+ const competing=await Promise.allSettled([updateArchive(1,items=>items.map(x=>({...x,notes:'Changed'}))),updateArchive(1,()=>[])]);
+ assert.equal(competing.filter(x=>x.status==='fulfilled').length,1);
+ assert.equal(competing.find(x=>x.status==='rejected').reason.status,409);
+ assert.equal((await readArchive()).items[0].notes,'Changed');
+ await updateArchive(2,()=>[]);assert.deepEqual((await readArchive()).items,[]);
+ assert.throws(()=>validateItem({...item,websites:['javascript:alert(1)']}));
+ assert.throws(()=>validateItem({...item,photos:['/api/photos/../../secret']}));
+}finally{await rm(directory,{recursive:true,force:true});}});
+test('password and signed sessions',()=>{assert.equal(login('wrong'),false);assert.equal(login('a-test-password'),true);const value=token();assert.equal(authorized({cookies:{get:()=>({value})}}),true);assert.equal(authorized({cookies:{get:()=>({value:value+'x'})}}),false);assert.equal(authorized({cookies:{get:()=>({value:value+'.suffix'})}}),false);assert.equal(authorized({cookies:{get:()=>undefined}}),false);process.env.ARCHIVE_PASSWORD='another-test-password';assert.equal(authorized({cookies:{get:()=>({value})}}),false);});

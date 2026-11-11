@@ -1,0 +1,6 @@
+.env*
+data/
+.git/
+scripts/
+.google-oauth-client.json
+client_secret*.json

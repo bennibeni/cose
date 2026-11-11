@@ -1,0 +1,19 @@
+# Dipendenze e file generati
+node_modules/
+.next/
+out/
+coverage/
+*.tsbuildinfo
+*.log
+
+# Password, token e chiavi (include i backup .env.local.*)
+.env*
+!.env.example
+.google-oauth-client.json
+client_secret*.json
+
+# Archivio e foto locali
+/data/
+
+# Collegamento e cache locali di Vercel
+.vercel/
