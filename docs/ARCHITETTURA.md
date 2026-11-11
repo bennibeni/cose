@@ -57,6 +57,8 @@ flowchart LR
 | [app/layout.js](../app/layout.js) | Documento HTML, lingua italiana, metadati e import del CSS globale. |
 | [app/page.js](../app/page.js) | Client Component: login, card, ricerca, ordinamento, editor e galleria. |
 | [app/style.css](../app/style.css) | Layout responsive, card, modali e schermata di accesso. |
+| [app/architettura/page.js](../app/architettura/page.js) | Pagina server protetta che legge questa guida dal file Markdown dopo aver verificato la sessione. |
+| [app/architettura/document.js](../app/architettura/document.js) | Renderer Markdown con tabelle GFM, ancore dei titoli e diagrammi Mermaid caricati su richiesta. |
 | [app/api/auth/route.js](../app/api/auth/route.js) | Stato della sessione, login e logout. |
 | [app/api/items/route.js](../app/api/items/route.js) | Lettura dell'archivio e comandi CRUD/riordino. |
 | [app/api/photos/route.js](../app/api/photos/route.js) | Ricezione, controllo del formato e salvataggio di una foto. |
@@ -75,6 +77,8 @@ flowchart LR
 | [STATO.md](../STATO.md) | Ultimo stato operativo registrato; non sostituisce la verifica delle impostazioni cloud. |
 
 La directory `data/`, i file `.env*` reali, il JSON OAuth e `.vercel/` sono locali e ignorati. `data/` non è una directory pubblica di Next.js: le immagini vengono servite dai Route Handler dopo il controllo della sessione.
+
+La guida è disponibile anche su `/architettura`, collegata dal footer dell'archivio. È una route dinamica autenticata sul server, con esclusione dall'indicizzazione e cache privata senza conservazione. Se manca la sessione reindirizza al login con una destinazione di ritorno fissa e consentita. Il file Markdown viene incluso esplicitamente nel tracing delle funzioni Vercel, senza duplicarne il testo nel codice. Il renderer disabilita HTML grezzo; Mermaid usa modalità strict. I link relativi ai sorgenti vengono convertiti in link al repository GitHub e i collegamenti interni restano ancore della pagina.
 
 ## 3. Modello dati e ordinamento
 

@@ -1,4 +1,5 @@
 export default {
+  outputFileTracingIncludes:{'/architettura':['./docs/ARCHITETTURA.md']},
   outputFileTracingExcludes:{'/*':['./data/**/*','./.env*','./scripts/**/*','./.google-oauth-client.json','./client_secret*.json']},
   async headers(){return [
     {source:'/:path*',headers:[
@@ -8,6 +9,7 @@ export default {
       {key:'Permissions-Policy',value:'camera=(), microphone=(), geolocation=()'},
       {key:'Content-Security-Policy',value:"frame-ancestors 'none'; base-uri 'self'; object-src 'none'; form-action 'self'"}
     ]},
-    {source:'/api/:path*',headers:[{key:'Cache-Control',value:'private, no-store'}]}
+    {source:'/api/:path*',headers:[{key:'Cache-Control',value:'private, no-store'}]},
+    {source:'/architettura',headers:[{key:'Cache-Control',value:'private, no-store'},{key:'X-Robots-Tag',value:'noindex, nofollow'}]}
   ];}
 };

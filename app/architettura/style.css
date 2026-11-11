@@ -1,0 +1,27 @@
+.architecture-header .brand{text-decoration:none;color:var(--ink)}
+.back-to-archive{text-decoration:none;font-size:13px;border:1px solid var(--line);background:#fff;border-radius:8px;padding:10px 14px;white-space:nowrap}
+.architecture-header>.back-to-archive{margin-left:auto}
+.architecture-workspace{max-width:1120px;margin:auto;padding:38px 5% 64px}
+.architecture-intro{margin-bottom:24px}
+.architecture-intro p{margin-top:0}
+.architecture-document{background:#fff;border:1px solid var(--line);border-radius:16px;padding:clamp(20px,4vw,56px);font-size:15px;line-height:1.85;overflow-wrap:anywhere}
+.architecture-document h1{font-size:clamp(27px,3.5vw,40px);line-height:1.25;margin-bottom:26px}
+.architecture-document h2{font-family:Manrope,system-ui,sans-serif;font-size:25px;font-weight:600;letter-spacing:-.6px;line-height:1.4;margin:52px 0 18px;padding-top:20px;border-top:1px solid var(--line);scroll-margin-top:24px}
+.architecture-document h3{font-size:18px;font-weight:600;line-height:1.5;margin:30px 0 12px;scroll-margin-top:24px}
+.architecture-document p{margin:14px 0}
+.architecture-document li{margin:7px 0}
+.architecture-document ol,.architecture-document ul{padding-left:25px}
+.architecture-document a{text-underline-offset:3px}
+.architecture-document code{font-size:.88em;background:#edf2e9;border-radius:4px;padding:2px 5px;white-space:break-spaces}
+.architecture-document pre{background:#1e322b;color:#edf2e9;border-radius:10px;padding:20px;overflow-x:auto;font-size:13px;line-height:1.7}
+.architecture-document pre code{background:transparent;padding:0;white-space:pre;color:inherit}
+.architecture-table{max-width:100%;overflow-x:auto;margin:22px 0;border:1px solid var(--line);border-radius:8px}
+.architecture-table table{width:100%;border-collapse:collapse;font-size:13px;line-height:1.65;text-align:left}
+.architecture-table th{background:#edf2e7;font-weight:600}
+.architecture-table th,.architecture-table td{padding:12px 14px;border-bottom:1px solid var(--line);vertical-align:top;min-width:160px}
+.architecture-table tr:last-child td{border-bottom:0}
+.architecture-diagram{overflow-x:auto;margin:28px 0;padding:20px;border:1px solid var(--line);border-radius:10px;background:#fafbf7;text-align:center}
+.architecture-diagram svg{display:block;max-width:none!important;min-width:600px;width:100%;height:auto;margin:auto}
+.architecture-bottom{display:inline-block;margin-top:28px}
+.developer-link{font-size:11px;text-underline-offset:3px}
+@media(max-width:650px){.architecture-header{gap:10px}.architecture-header .private{display:none}.architecture-workspace{padding:24px 12px 40px}.architecture-document{border-radius:12px;padding:20px 16px;font-size:14px}.architecture-document h2{font-size:22px;margin-top:36px}.architecture-diagram{padding:10px}.architecture-table th,.architecture-table td{padding:10px;min-width:140px}.architecture-bottom{width:100%;text-align:center}}

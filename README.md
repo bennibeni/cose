@@ -6,6 +6,8 @@ App Next.js con interfaccia italiana, password, CRUD, ricerca, ordinamento manua
 
 La [guida dettagliata dell'architettura](docs/ARCHITETTURA.md) descrive componenti, modello dati, API, sessioni, cifratura, storage, concorrenza, flusso foto, configurazione, deploy, test, backup e limiti del codice corrente.
 
+La stessa guida è consultabile nell'app alla pagina `/architettura`, dopo l'accesso, tramite il collegamento **Guida sviluppatore** nel footer dell'archivio. Il contenuto deriva direttamente dal file Markdown; tabelle, indice e diagrammi vengono visualizzati nella pagina.
+
 Per configurare gli account e le variabili cloud, consulta anche [Google Drive e Vercel](GOOGLE-DRIVE-VERCEL.md).
 
 ## Avvio
