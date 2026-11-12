@@ -1,6 +1,6 @@
 # Cose — archivio privato
 
-App Next.js con interfaccia italiana, password, CRUD, ricerca, ordinamento manuale e per campo, foto principale e galleria. Telefono e indirizzo sono obbligatori; gli altri campi sono facoltativi. Supporta filesystem locale oppure Google Drive privato con cifratura per il deploy su Vercel.
+App Next.js con interfaccia italiana, password, CRUD, ricerca, ordinamento manuale e per campo, foto principale e galleria. Le foto si possono scegliere dal dispositivo o da un link web diretto e centrare/ritagliare con drag e zoom prima dell'upload. Telefono e indirizzo sono obbligatori; gli altri campi sono facoltativi. Supporta filesystem locale oppure Google Drive privato con cifratura per il deploy su Vercel.
 
 ## Documentazione per lo sviluppatore
 

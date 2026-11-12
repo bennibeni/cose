@@ -56,18 +56,21 @@ flowchart LR
 | --- | --- |
 | [app/layout.js](../app/layout.js) | Documento HTML, lingua italiana, metadati e import del CSS globale. |
 | [app/page.js](../app/page.js) | Client Component: login, card, ricerca, ordinamento, editor e galleria. |
+| [app/components/photo-picker.js](../app/components/photo-picker.js) | Selezione locale o da URL, coda di foto e anteprima di ritaglio con drag e zoom. |
 | [app/style.css](../app/style.css) | Layout responsive, card, modali e schermata di accesso. |
 | [app/architettura/page.js](../app/architettura/page.js) | Pagina server protetta che legge questa guida dal file Markdown dopo aver verificato la sessione. |
 | [app/architettura/document.js](../app/architettura/document.js) | Renderer Markdown con tabelle GFM, ancore dei titoli e diagrammi Mermaid caricati su richiesta. |
 | [app/api/auth/route.js](../app/api/auth/route.js) | Stato della sessione, login e logout. |
 | [app/api/items/route.js](../app/api/items/route.js) | Lettura dell'archivio e comandi CRUD/riordino. |
 | [app/api/photos/route.js](../app/api/photos/route.js) | Ricezione, controllo del formato e salvataggio di una foto. |
+| [app/api/photos/import/route.js](../app/api/photos/import/route.js) | Importazione autenticata da URL pubblico e normalizzazione con Sharp; restituisce un'anteprima senza persisterla. |
 | [app/api/photos/[name]/route.js](../app/api/photos/%5Bname%5D/route.js) | Download autenticato di una foto. |
 | [lib/auth.mjs](../lib/auth.mjs) | Password, firma della sessione, cookie, limite locale dei tentativi e controllo origine. |
 | [lib/storage.mjs](../lib/storage.mjs) | Selezione del backend, persistenza locale e validazione degli elementi. |
 | [lib/drive.mjs](../lib/drive.mjs) | Refresh del token, chiamate Drive, lettura coerente, aggiornamento condizionale e foto remote. |
 | [lib/encryption.mjs](../lib/encryption.mjs) | Envelope AES-256-GCM con dati autenticati aggiuntivi. |
 | [lib/prepare-photo.js](../lib/prepare-photo.js) | Ridimensionamento e conversione delle foto nel browser. |
+| [lib/remote-image.mjs](../lib/remote-image.mjs) | Download remoto con controllo IP/DNS, connessione vincolata all'indirizzo verificato, limiti e controllo dei redirect. |
 | [scripts/connect-drive.mjs](../scripts/connect-drive.mjs) | Bootstrap OAuth locale e creazione del nuovo archivio remoto. |
 | [tests](../tests) | Test Node per storage, Drive simulato, cifratura e sicurezza. |
 | [next.config.mjs](../next.config.mjs) | Header HTTP ed esclusioni dal tracing dei file server. |
@@ -191,6 +194,7 @@ Ogni mutazione riuscita restituisce `{revision, items}` aggiornato. Anche un com
 | Metodo e percorso | Contratto |
 | --- | --- |
 | `POST /api/photos` | `multipart/form-data`, campo `photo`; sessione e origine obbligatorie. Restituisce `{ "url": "/api/photos/<uuid>.<estensione>" }`. |
+| `POST /api/photos/import` | JSON `{ "url": "https://sito.example/immagine.jpg" }`, sessione e origine obbligatorie. Restituisce byte JPEG per l'editor oppure un errore JSON. Non salva ancora la foto. |
 | `GET /api/photos/[name]` | Sessione obbligatoria; nome ristretto a UUID/caratteri esadecimali con estensione `jpg`, `png` o `webp`. Restituisce i byte e il MIME appropriato. |
 
 Non si restituisce un link pubblico Google Drive. Un upload riuscito non aggiunge automaticamente la foto a una scheda: il frontend inserisce il percorso nella bozza e deve poi salvare l'elemento.
@@ -343,7 +347,15 @@ Nel browser `preparePhoto`:
 5. Produce JPEG provando qualità `0.88`, `0.75`, `0.6`, `0.4`, fino a ottenere un file non superiore a 3 MiB.
 6. Invia una foto per richiesta; gli upload multipli sono sequenziali.
 
-Il contenuto caricato è la nuova immagine canvas, non l'originale: il frontend non conserva i metadati originali o un backup della foto sorgente. HEIC non è supportato direttamente.
+Prima di questi passaggi il componente `PhotoPicker` mostra la foto con `react-easy-crop`. L'utente può trascinarla, regolare lo zoom da 1 a 4, scegliere rapporto 3:2, quadrato o originale e usare Ricentra. I pixel del ritaglio vengono passati a `preparePhoto(file, crop)`, che controlla i limiti della selezione e disegna solo quell'area sul canvas. Il pulsante “Usa questa immagine” avvia l'upload; fino alla conferma o all'annullamento il salvataggio della scheda è disabilitato. Una selezione multipla viene inquadrata e confermata una foto per volta.
+
+Il contenuto caricato è la nuova immagine canvas, non l'originale: il frontend non conserva i metadati originali o un backup della foto sorgente. HEIC locale non è supportato direttamente.
+
+### Importazione da un sito web
+
+Il browser invia il link diretto a `POST /api/photos/import`. Il server accetta soltanto HTTP/HTTPS su porte standard, senza credenziali nell'URL. Verifica che tutti gli indirizzi DNS restituiti siano pubblici, blocca loopback, reti private, link-local, indirizzi riservati e corrispondenti forme IPv4-mapped. La connessione usa l'IP già verificato tramite un lookup personalizzato: non effettua una seconda risoluzione DNS non controllata. Ogni redirect viene validato nuovamente, fino a tre reindirizzamenti; non vengono inoltrati cookie o token dell'utente.
+
+Il download ha un budget di 20 secondi e un limite di 15 MiB. Sharp controlla e decodifica l'immagine con un limite di 40 milioni di pixel, applica l'orientamento e la normalizza in JPEG fino a 2000 pixel e 3 MiB. I formati remoti ammessi dal decoder includono JPEG, PNG, WebP, GIF (primo fotogramma) e HEIF/AVIF quando supportati dalla build Sharp. SVG e pagine HTML non vengono restituiti all'editor. L'anteprima usa un object URL locale, che viene revocato quando non serve più; l'utente deve ancora scegliere l'inquadratura e confermare il caricamento su Drive. Alcuni siti possono vietare il download: in tal caso occorre salvare la foto sul dispositivo e caricarla come file.
 
 Il server controlla dimensione e firme iniziali JPEG/PNG/WebP; non effettua una decodifica completa o una seconda ricompressione. Un client API diverso dall'interfaccia può quindi caricare PNG/WebP e immagini con metadati: la rimozione dei metadati non è una garanzia del backend per tutti i client possibili.
 
@@ -450,6 +462,7 @@ Una modifica al modello, ai payload API, alle variabili richieste, alla sessione
 | `tests/storage.test.mjs` | Persistenza locale, controllo della revisione, validazione e firma della sessione. |
 | `tests/drive.test.mjs` | Adapter con fetch simulato, istanze concorrenti, foto cifrate, errori, file condivisi e integrità AES-GCM. |
 | `tests/security.test.mjs` | Origine esatta, cookie Secure su Vercel e rifiuto del filesystem in produzione. |
+| `tests/remote-image.test.mjs` | Blocco di indirizzi interni e URL non consentiti, risposte DNS miste, redirect, DNS rebinding e limiti del download. |
 
 `npm test` usa `node --test`; non richiede l'account Google reale e non sostituisce i controlli del servizio. Lo script di bootstrap verifica realmente la precondizione ETag sul nuovo archivio. Sono state inoltre eseguite verifiche HTTP in produzione per login, CRUD e foto, ma non esiste uno script E2E browser versionato né una pipeline CI dichiarata nel repository.
 
