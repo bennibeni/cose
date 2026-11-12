@@ -2,6 +2,8 @@
 
 App Next.js con interfaccia italiana, password, CRUD, ricerca, ordinamento manuale e per campo, foto principale e galleria. Le foto si possono scegliere dal dispositivo o da un link web diretto e centrare/ritagliare con drag e zoom prima dell'upload. Telefono e indirizzo sono obbligatori; gli altri campi sono facoltativi. Supporta filesystem locale oppure Google Drive privato con cifratura per il deploy su Vercel.
 
+Nel modulo di ogni scheda è disponibile il campo facoltativo **Recensione**. Se compilato, la card mostra una piccola immagine a destra del telefono: selezionandola si apre la recensione in una modale. L’immagine è inclusa nel progetto e il testo viene salvato insieme agli altri dati dell’archivio.
+
 ## Documentazione per lo sviluppatore
 
 La [guida dettagliata dell'architettura](docs/ARCHITETTURA.md) descrive componenti, modello dati, API, sessioni, cifratura, storage, concorrenza, flusso foto, configurazione, deploy, test, backup e limiti del codice corrente.

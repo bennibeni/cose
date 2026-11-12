@@ -57,6 +57,8 @@ flowchart LR
 | [app/layout.js](../app/layout.js) | Documento HTML, lingua italiana, metadati e import del CSS globale. |
 | [app/page.js](../app/page.js) | Client Component: login, card, ricerca, ordinamento, editor e galleria. |
 | [app/components/photo-picker.js](../app/components/photo-picker.js) | Selezione locale o da URL, coda di foto e anteprima di ritaglio con drag e zoom. |
+| [app/components/review-dialog.js](../app/components/review-dialog.js) | Modale nativa per leggere la recensione, con chiusura via pulsante, Escape o clic sullo sfondo e ripristino del focus. |
+| [public/images/review-thumbnail.jpg](../public/images/review-thumbnail.jpg) | Miniatura comune delle recensioni, copiata e ridotta dalla risorsa indicata dal proprietario. |
 | [app/style.css](../app/style.css) | Layout responsive, card, modali e schermata di accesso. |
 | [app/architettura/page.js](../app/architettura/page.js) | Pagina server protetta che legge questa guida dal file Markdown dopo aver verificato la sessione. |
 | [app/architettura/document.js](../app/architettura/document.js) | Renderer Markdown con tabelle GFM, ancore dei titoli e diagrammi Mermaid caricati su richiesta. |
@@ -98,6 +100,7 @@ Il contenuto logico dell'archivio, prima della cifratura, è:
       "date": "2026-11-11",
       "address": "Indirizzo dimostrativo",
       "notes": "Nota di esempio",
+      "review": "Recensione dimostrativa, facoltativa.",
       "websites": ["https://example.com/"],
       "photos": ["/api/photos/aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee.jpg"]
     }
@@ -114,6 +117,7 @@ Il contenuto logico dell'archivio, prima della cifratura, è:
 | `date` | Stringa vuota oppure data valida nel formato `YYYY-MM-DD`; non è un timestamp. |
 | `address` | Stringa obbligatoria, massimo 1.000 caratteri; nessuna geocodifica. |
 | `notes` | Stringa anche vuota, massimo 20.000 caratteri. |
+| `review` | Recensione in testo semplice, massimo 20.000 caratteri, rifilata con `trim`. Se assente nei record o nelle richieste precedenti viene considerata vuota; le nuove scritture includono una stringa. |
 | `websites` | Array fino a 30 URL HTTP/HTTPS, massimo 2.000 caratteri ciascuno. Gli URL vengono normalizzati con `URL`. |
 | `photos` | Array fino a 30 percorsi foto nel formato accettato da `validateItem`; i byte sono separati. |
 
@@ -124,6 +128,8 @@ Telefono, indirizzo e note vengono rifilati con `trim`. I campi del modello devo
 **L'ordine manuale coincide con l'ordine di `items`.** Non esistono campi `position` o `sortOrder`. Gli ordinamenti per indirizzo, verifica o inserimento sono viste calcolate nel browser e non riscrivono l'ordine manuale.
 
 Non esiste ancora un `schemaVersion` del modello applicativo né un motore di migrazione. Il campo `v` dell'envelope cifrato, descritto più avanti, identifica soltanto il formato crittografico.
+
+Il campo `review` è retrocompatibile: leggere una scheda precedente non richiede riscrivere l'archivio o creare una recensione. L'editor usa una stringa vuota per il campo mancante e la validazione lo normalizza al successivo salvataggio.
 
 ## 4. Interfaccia e stato React
 
@@ -144,6 +150,8 @@ Gli stati principali sono:
 All'avvio `useEffect` chiama `GET /api/auth`; se la sessione è valida chiama `GET /api/items`. L'helper `api` converte le risposte JSON e porta `auth` a `false` su un `401` delle API dati. `run` gestisce stato occupato ed errori; `mutate` invia la revisione corrente e sostituisce `data` con l'archivio restituito dal server.
 
 La ricerca avviene in memoria su telefono, indirizzo, note e link. Non esistono paginazione, ricerca server, polling continuo o sincronizzazione in tempo reale: per vedere modifiche da un altro dispositivo si usa il comando di ricarica o si ripete il caricamento della pagina.
+
+Anche il testo della recensione è incluso nella ricerca. Quando `review` contiene testo non vuoto, nella riga del telefono compare sulla destra un pulsante con miniatura e nome accessibile “Leggi recensione di …”. L'immagine è una copia locale della [risorsa fornita](https://trans-advisor.com/images/placeholder.jpeg), non un collegamento remoto caricato a ogni card. Il clic apre un elemento HTML `dialog` modale: il contenuto è testo React escapato, con a capo preservati, senza interpretazione HTML. Una recensione lunga scorre nella zona centrale; il pulsante di chiusura resta nell'intestazione. La recensione è parte del JSON dell'archivio e usa quindi la stessa cifratura e gli stessi controlli di revisione degli altri dati.
 
 Il riordino manuale è disabilitato quando è attiva una ricerca o una vista ordinata per campo. Il trascinamento inserisce l'elemento prima della card di destinazione. I pulsanti di spostamento usano lo stesso helper; vedere anche la nota sul comando di spostamento verso il basso nella sezione dei limiti.
 

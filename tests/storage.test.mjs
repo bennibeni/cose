@@ -12,15 +12,24 @@ process.env.SESSION_SECRET='a-long-test-secret-with-at-least-32-characters';
 const {readArchive,updateArchive,validateItem}=await import('../lib/storage.mjs');
 const {authorized,login,token}=await import('../lib/auth.mjs');
 test('persistence, conflict detection and CRUD',async()=>{try{
- const item=validateItem({phone:'123',date:'2026-11-11',address:'Roma',notes:'Nota',websites:['https://example.com'],photos:[]});
+ const item=validateItem({phone:'123',date:'2026-11-11',address:'Roma',notes:'Nota',review:'Recensione di prova\nSeconda riga',websites:['https://example.com'],photos:[]});
  assert.equal((await readArchive()).revision,0);
  await updateArchive(0,()=>[{...item,id:'one'}]);
  const competing=await Promise.allSettled([updateArchive(1,items=>items.map(x=>({...x,notes:'Changed'}))),updateArchive(1,()=>[])]);
  assert.equal(competing.filter(x=>x.status==='fulfilled').length,1);
  assert.equal(competing.find(x=>x.status==='rejected').reason.status,409);
  assert.equal((await readArchive()).items[0].notes,'Changed');
+ assert.equal((await readArchive()).items[0].review,'Recensione di prova\nSeconda riga');
  await updateArchive(2,()=>[]);assert.deepEqual((await readArchive()).items,[]);
  assert.throws(()=>validateItem({...item,websites:['javascript:alert(1)']}));
  assert.throws(()=>validateItem({...item,photos:['/api/photos/../../secret']}));
 }finally{await rm(directory,{recursive:true,force:true});}});
 test('password and signed sessions',()=>{assert.equal(login('wrong'),false);assert.equal(login('a-test-password'),true);const value=token();assert.equal(authorized({cookies:{get:()=>({value})}}),true);assert.equal(authorized({cookies:{get:()=>({value:value+'x'})}}),false);assert.equal(authorized({cookies:{get:()=>({value:value+'.suffix'})}}),false);assert.equal(authorized({cookies:{get:()=>undefined}}),false);process.env.ARCHIVE_PASSWORD='another-test-password';assert.equal(authorized({cookies:{get:()=>({value})}}),false);});
+
+test('reviews are optional for old records, trimmed, typed and bounded',()=>{
+ const legacy={phone:'123',date:'',address:'Roma',notes:'',websites:[],photos:[]};
+ assert.equal(validateItem(legacy).review,'');
+ assert.equal(validateItem({...legacy,review:'  Testo\nSeconda riga  '}).review,'Testo\nSeconda riga');
+ assert.equal(validateItem({...legacy,review:'   '}).review,'');
+ for(const review of [null,17,{},'x'.repeat(20001)])assert.throws(()=>validateItem({...legacy,review}));
+});
