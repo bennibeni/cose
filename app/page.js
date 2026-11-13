@@ -2,6 +2,7 @@
 import {useEffect,useState} from 'react';
 import PhotoPicker from './components/photo-picker';
 import ReviewDialog from './components/review-dialog';
+import {assertUniquePhone} from '../lib/phone.mjs';
 const empty=()=>({phone:'',date:'',address:'',notes:'',review:'',websites:[],photos:[]});
 export default function Home(){
  const [auth,A]=useState(null),[data,D]=useState({revision:0,items:[]}),[error,E]=useState(''),[busy,B]=useState(false),[query,Q]=useState(''),[sort,S]=useState('manual'),[edit,F]=useState(null),[gallery,G]=useState(null),[drag,T]=useState(null),[photoPending,PP]=useState(false),[review,R]=useState(null);
@@ -9,7 +10,7 @@ export default function Home(){
  async function load(){D(await api('/api/items'));}
  useEffect(()=>{api('/api/auth').then(async r=>{A(r.authenticated);if(r.authenticated)await load();}).catch(e=>E(e.message));},[]);
  async function run(fn){B(true);E('');try{await fn();}catch(e){E(e.message);}finally{B(false);}}
- async function mutate(body){D(await api('/api/items',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({...body,revision:data.revision})}));}
+ async function mutate(body){if(body.action==='create'||body.action==='update')assertUniquePhone(data.items,body.item.phone,body.action==='update'?body.id:undefined);D(await api('/api/items',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({...body,revision:data.revision})}));}
  async function move(id,target){if(id===target)return;const ids=data.items.map(x=>x.id);ids.splice(ids.indexOf(id),1);ids.splice(ids.indexOf(target),0,id);await run(()=>mutate({action:'reorder',ids}));}
  function field(key,value){F(prev=>({...prev,[key]:value}));}
  async function savePhoto(file){B(true);E('');try{const form=new FormData();form.set('photo',file);const result=await api('/api/photos',{method:'POST',body:form});F(prev=>prev?{...prev,photos:[...prev.photos,result.url]}:prev);}finally{B(false);}}
